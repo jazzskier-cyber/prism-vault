@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {Game,SHAPES} from './engine.js';
+test('seven-bag supplies every piece exactly once per bag',()=>{const g=new Game();const first=[g.piece.type,...g.queue.slice(0,6)];assert.equal(new Set(first).size,7);});
+test('hold is limited to once per piece and becomes available after locking',()=>{const g=new Game();const first=g.piece.type;assert.equal(g.hold(),true);assert.equal(g.held,first);assert.equal(g.hold(),false);g.drop();assert.equal(g.hold(),true);assert.equal(g.piece.type,first);});
+test('four-line clear removes rows, scores 800, and advances level',()=>{const g=new Game();for(let y=16;y<20;y++)g.board[y]=Array.from({length:10},(_,x)=>x===5?null:'J');g.board[15][0]='Z';g.piece={type:'I',matrix:[[0,0,1,0],[0,0,1,0],[0,0,1,0],[0,0,1,0]],x:3,y:16,rotation:1};g.lines=6;const r=g.lock();assert.equal(r.count,4);assert.equal(r.points,800);assert.equal(g.lines,10);assert.equal(g.level,2);assert.equal(g.board[19][0],'Z');});
+test('ghost lands on stack without mutating the active piece',()=>{const g=new Game();g.spawn('O');g.board[19][4]='J';const y=g.piece.y;assert.equal(g.ghost().y,17);assert.equal(g.piece.y,y);assert.equal(g.fits({...g.ghost(),y:18}),false);});
+test('wall kicks keep a rotating T inside the board',()=>{const g=new Game();g.spawn('T');g.rotate();g.piece.x=-1;assert.ok(g.fits(g.piece));assert.equal(g.rotate(),true);assert.equal(g.piece.x,0);assert.ok(g.fits(g.piece));});
+test('clockwise and counterclockwise rotations are inverses in open space',()=>{for(const t of Object.keys(SHAPES)){const g=new Game();g.spawn(t);g.piece.y=5;const original=JSON.stringify(g.piece);g.rotate(1);g.rotate(-1);assert.equal(JSON.stringify(g.piece),original);}});
+test('blocked spawn ends the run',()=>{const g=new Game();g.board[0].fill('J');g.spawn('O');assert.equal(g.over,true);});
+test('sprint finishes at 40 lines',()=>{const g=new Game('sprint');g.lines=39;g.board[19].fill('J');g.board[19][4]=null;g.board[19][5]=null;g.spawn('O');g.drop();assert.equal(g.lines,40);assert.equal(g.won,true);assert.equal(g.over,true);});
+test('consecutive four-line clears earn back-to-back and combo bonuses',()=>{const g=new Game();function set(){g.board=Array.from({length:20},()=>Array(10).fill(null));g.board[15][0]='Z';for(let y=16;y<20;y++)g.board[y]=Array.from({length:10},(_,x)=>x===5?null:'J');g.piece={type:'I',matrix:[[0,0,1,0],[0,0,1,0],[0,0,1,0],[0,0,1,0]],x:3,y:16,rotation:1};}set();assert.equal(g.lock().points,800);set();assert.equal(g.lock().points,1250);});

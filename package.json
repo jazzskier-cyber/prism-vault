@@ -1,0 +1,12 @@
+{
+  "name": "prism-vault",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node tools/serve.mjs",
+    "start": "node tools/serve.mjs",
+    "test": "node --test",
+    "build": "node build.mjs"
+  }
+}
