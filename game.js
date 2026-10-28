@@ -46,7 +46,7 @@ function togglePause(){
  if(state==='paused'){state=resumeState;restartPending=false;$('overlay').classList.add('hidden');pauseLabel('pause');}
  else{resumeState=state;state='paused';keys.clear();overlay('pause');pauseLabel('resume');}render();
 }
-function finish(){state='end';keys.clear();rankings.finish(game.mode,game.score);if(game.score>best){best=game.score;$('best').textContent=fmt(best);try{localStorage.setItem(bestKey(),String(best));}catch{}}overlay('end');tone(game.won?880:160,.4);render();}
+function finish(){state='end';keys.clear();rankings.finish(game.score);if(game.score>best){best=game.score;$('best').textContent=fmt(best);try{localStorage.setItem(bestKey(),String(best));}catch{}}overlay('end');tone(game.won?880:160,.4);render();}
 function afterResolve(){
  if(game.over){finish();return;}
  if(adventure()&&game.chapterDone){state='hunt';keys.clear();$('toast').classList.remove('show');treasure.open(game.chapter);render();return;}
@@ -81,7 +81,7 @@ for(const b of document.querySelectorAll('[data-action]')){b.addEventListener('p
 document.addEventListener('keyup',e=>keys.delete(e.code));
 const autoPause=()=>{keys.clear();if(state==='playing'||state==='settling')togglePause();};window.addEventListener('blur',autoPause);document.addEventListener('visibilitychange',()=>{if(document.hidden)autoPause();});
 let touch=null;$('board').style.touchAction='none';$('board').addEventListener('pointerdown',e=>{touch={x:e.clientX,y:e.clientY};});$('board').addEventListener('pointerup',e=>{if(!touch)return;const dx=e.clientX-touch.x,dy=e.clientY-touch.y;if(dy>50)action('drop');else if(Math.abs(dx)>25)action(dx>0?'right':'left');else action('rotate');touch=null;});$('board').addEventListener('pointercancel',()=>touch=null);
-const rankings=createRankings({pause:autoPause});
+const rankings=createRankings({pause:autoPause,currentMode:()=>document.querySelector('[data-mode].selected').dataset.mode});
 const treasure=createTreasure({onFind:()=>tone(750,.18,'triangle'),onComplete:(found,total)=>{game.nextChapter(found,total);gravity=lockTime=lockResets=0;keys.clear();if(game.over)finish();else{state='playing';if(adventure())toast(t('toast.chapter',{n:game.chapter,name:t(`chapter.${game.chapter}`)}),t('toast.blasts',{n:game.blasts}));else{toast(t('toast.journey'),t('toast.journeySub'));$('status').textContent=t('status.journey');$('tip-copy').textContent=t('tip.journey');}render();}}});
 function frame(now){
  const dt=Math.min(now-last,80);last=now;
